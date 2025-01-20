@@ -251,6 +251,7 @@ export const SETTINGS_MAP: SettingSection[] = [
                 id: 'web-revenue-events',
                 title: 'Revenue tracking',
                 component: <RevenueEventsSettings />,
+                flag: 'WEB_REVENUE_TRACKING',
             },
         ],
     },
