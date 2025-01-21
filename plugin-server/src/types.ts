@@ -308,6 +308,10 @@ export interface PluginsServerConfig extends CdpConfig {
 
     CYCLOTRON_DATABASE_URL: string
     CYCLOTRON_SHARD_DEPTH_LIMIT: number
+
+    // cookieless
+    COOKIELESS_DISABLED: boolean
+    COOKIELESS_FORCE_STATELESS_MODE: boolean
 }
 
 export interface Hub extends PluginsServerConfig {
@@ -350,6 +354,9 @@ export interface Hub extends PluginsServerConfig {
     // lookups
     eventsToDropByToken: Map<string, string[]>
     encryptedFields: EncryptedFields
+
+    // cookieless
+    cookielessConfig: CookielessConfig
 }
 
 export interface PluginServerCapabilities {
@@ -1333,4 +1340,9 @@ export interface ModelRow {
         start: string
         end: string
     }
+}
+
+export interface CookielessConfig {
+    disabled: boolean
+    forceStatelessMode: boolean
 }

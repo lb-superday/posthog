@@ -1,4 +1,11 @@
-import { LogLevel, PluginLogLevel, PluginsServerConfig, stringToPluginServerMode, ValueMatcher } from '../types'
+import {
+    CookielessConfig,
+    LogLevel,
+    PluginLogLevel,
+    PluginsServerConfig,
+    stringToPluginServerMode,
+    ValueMatcher,
+} from '../types'
 import { isDevEnv, isTestEnv, stringToBoolean } from '../utils/env-utils'
 import { KAFKAJS_LOG_LEVEL_MAPPING } from './constants'
 import {
@@ -205,6 +212,9 @@ export function getDefaultConfig(): PluginsServerConfig {
             : '',
 
         CYCLOTRON_SHARD_DEPTH_LIMIT: 1000000,
+
+        COOKIELESS_FORCE_STATELESS_MODE: false,
+        COOKIELESS_DISABLED: false,
     }
 }
 
@@ -293,5 +303,12 @@ export function buildStringMatcher(config: string | undefined, allowStar: boolea
         return (v: string) => {
             return values.has(v)
         }
+    }
+}
+
+export const createCookielessConfig = (config: PluginsServerConfig): CookielessConfig => {
+    return {
+        disabled: config.COOKIELESS_DISABLED,
+        forceStatelessMode: config.COOKIELESS_FORCE_STATELESS_MODE,
     }
 }
