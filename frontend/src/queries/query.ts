@@ -1,5 +1,4 @@
-import { fetchEventSource } from '@microsoft/fetch-event-source'
-import api, { ApiMethodOptions, getCookie } from 'lib/api'
+import api, { ApiMethodOptions } from 'lib/api'
 import { FEATURE_FLAGS } from 'lib/constants'
 import { featureFlagLogic } from 'lib/logic/featureFlagLogic'
 import { delay } from 'lib/utils'
@@ -107,42 +106,41 @@ async function executeQuery<N extends DataNode>(
     if (useEventSource) {
         return new Promise((resolve, reject) => {
             const abortController = new AbortController()
-
-            void fetchEventSource('/' + api.queryEventSourceUrl(), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: '*/*',
-                    'X-CSRFToken': getCookie('posthog_csrftoken') || '',
-                },
-                body: JSON.stringify({
-                    query: queryNode,
-                    client_query_id: queryId,
-                    refresh: refresh,
-                    filters_override: filtersOverride,
-                    variables_override: variablesOverride,
-                }),
-                signal: abortController.signal,
-                onmessage(ev) {
-                    try {
-                        const data = JSON.parse(ev.data)
-                        if (data.error) {
+            void api
+                .stream(api.queryEventSourceUrl(), {
+                    method: 'POST',
+                    headers: {
+                        Accept: '*/*', // HACK: The endpoint currently doesn't properly handle text/event-stream
+                    },
+                    data: {
+                        query: queryNode,
+                        client_query_id: queryId,
+                        refresh: refresh,
+                        filters_override: filtersOverride,
+                        variables_override: variablesOverride,
+                    },
+                    onMessage(ev) {
+                        try {
+                            const data = JSON.parse(ev.data)
+                            if (data.error) {
+                                abortController.abort()
+                                reject(new Error(data.error))
+                            } else {
+                                abortController.abort()
+                                resolve(data)
+                            }
+                        } catch (e) {
                             abortController.abort()
-                            reject(new Error(data.error))
-                        } else {
-                            abortController.abort()
-                            resolve(data)
+                            reject(e)
                         }
-                    } catch (e) {
+                    },
+                    onError(err) {
                         abortController.abort()
-                        reject(e)
-                    }
-                },
-                onerror(err) {
-                    abortController.abort()
-                    reject(err)
-                },
-            }).catch(reject)
+                        reject(err)
+                    },
+                    signal: abortController.signal,
+                })
+                .catch(reject)
         })
     }
 
